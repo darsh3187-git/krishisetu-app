@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KrishiSetu | Login & Sign Up</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="/index.html" class="brand" style="display:flex; align-items:center; gap:8px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c1 2 1.6 3.5 2.4 9.2A7 7 0 0 1 11 20z"></path><path d="M2 21c0-3 1.85-5.36 5-6"></path></svg>
+      KrishiSetu
+    </a>
+    <div style="font-size:13px; color:var(--muted); font-weight:600;">Direct Farmer-to-Buyer App</div>
+  </header>
+
+  <main class="container">
+    <div class="auth-container">
+      <div style="text-align:center; margin-bottom:14px;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary); background:var(--primary-light); padding:10px; border-radius:50%;"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c1 2 1.6 3.5 2.4 9.2A7 7 0 0 1 11 20z"></path><path d="M2 21c0-3 1.85-5.36 5-6"></path></svg>
+        <h2 style="margin:6px 0 2px; color:var(--primary);">KrishiSetu</h2>
+        <p style="margin:0; font-size:12.5px; color:var(--muted);">Empowering farmers & buyers with direct marketplace trade</p>
+      </div>
+
+      <div class="auth-tabs" id="authTabsBar">
+        <button type="button" id="tabLogin" class="auth-tab active" onclick="showView('login')">🔐 Login</button>
+        <button type="button" id="tabSignup" class="auth-tab" onclick="showView('signup')">📝 Sign Up</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Mobile Number or Admin Username</label>
+          <input type="text" id="loginPhone" placeholder="Enter mobile or 'admin'" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter password" required>
+        </div>
+
+        <div style="text-align:right; margin-bottom:14px;">
+          <a href="javascript:void(0)" onclick="showView('forgot')" style="font-size:13px; color:var(--primary); font-weight:700; text-decoration:none;">
+            🔑 Forgot Password? (Reset via OTP)
+          </a>
+        </div>
+
+        <button type="submit" class="btn" style="width:100%; padding:12px; font-size:15px;">
+          Login →
+        </button>
+      </form>
+
+      <!-- SIGN UP FORM -->
+      <form id="signupForm" style="display:none;">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="regName" placeholder="Enter your full name" required>
+        </div>
+        <div class="form-group">
+          <label>Mobile Number (10 digits)</label>
+          <input type="text" id="regPhone" placeholder="e.g. 9900112233" required>
+        </div>
+        <div class="form-group">
+          <label>City / District</label>
+          <input type="text" id="regLocation" placeholder="e.g. Mysuru, Karnataka" required>
+        </div>
+        <div class="form-group">
+          <label>Create Password</label>
+          <input type="password" id="regPassword" placeholder="Create password" required>
+        </div>
+        <button type="submit" class="btn" style="width:100%; padding:12px; font-size:15px;">
+          Sign Up & Open Marketplace →
+        </button>
+      </form>
+
+      <!-- FORGOT PASSWORD VIEW -->
+      <div id="forgotView" style="display:none;">
+        <h3 style="margin-top:0; color:var(--primary);">🔑 Reset Password via OTP</h3>
+        <p style="font-size:13px; color:var(--muted);">Enter your registered mobile number to receive a 6-digit OTP.</p>
+
+        <div id="otpSmsBanner" style="display:none; background:#ecfdf5; border:2px solid #10b981; color:#065f46; padding:12px; border-radius:10px; margin-bottom:12px; font-size:13px;"></div>
+
+        <div class="form-group">
+          <label>Registered Mobile Number</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="fpPhone" placeholder="e.g. 9811223344" style="flex:1;">
+            <button type="button" class="btn btn-outline" onclick="sendResetOtp()">Send OTP</button>
+          </div>
+        </div>
+
+        <form id="resetPasswordForm">
+          <div class="form-group">
+            <label>Enter 6-Digit OTP</label>
+            <input type="text" id="fpOtp" placeholder="Enter 6-digit OTP" required>
+          </div>
+          <div class="form-group">
+            <label>Create New Password</label>
+            <input type="password" id="fpNewPassword" placeholder="Enter new password" required>
+          </div>
+          <button type="submit" class="btn" style="width:100%; padding:12px;">
+            Verify OTP & Save New Password
+          </button>
+        </form>
+
+        <div style="text-align:center; margin-top:14px;">
+          <a href="javascript:void(0)" onclick="showView('login')" style="font-size:13px; color:var(--muted); font-weight:700;">← Back to Login</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function showView(view) {
+      document.getElementById("loginForm").style.display = view === "login" ? "block" : "none";
+      document.getElementById("signupForm").style.display = view === "signup" ? "block" : "none";
+      document.getElementById("forgotView").style.display = view === "forgot" ? "block" : "none";
+      document.getElementById("authTabsBar").style.display = view === "forgot" ? "none" : "grid";
+      if (view !== "forgot") {
+        document.getElementById("tabLogin").classList.toggle("active", view === "login");
+        document.getElementById("tabSignup").classList.toggle("active", view === "signup");
+      }
+    }
+
+    function routeUser(user) {
+      localStorage.setItem("krishi_user", JSON.stringify(user));
+      if (user.is_admin) {
+        window.location.href = "/admin.html";
+      } else {
+        window.location.href = "/marketplace.html";
+      }
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const phone = document.getElementById("loginPhone").value;
+      const password = document.getElementById("loginPassword").value;
+
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: phone, password })
+      });
+      const data = await res.json();
+      if (!data.success) return alert(data.message);
+      routeUser(data.user);
+    });
+
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("regName").value;
+      const phone = document.getElementById("regPhone").value;
+      const location = document.getElementById("regLocation").value;
+      const password = document.getElementById("regPassword").value;
+
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone, location, password })
+      });
+      const data = await res.json();
+      if (!data.success) return alert(data.message);
+      routeUser(data.user);
+    });
+
+    async function sendResetOtp() {
+      const phone = document.getElementById("fpPhone").value.trim();
+      if (!phone) return alert("Enter registered mobile number.");
+      const res = await fetch("/api/auth/forgot-password/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone })
+      });
+      const data = await res.json();
+      if (!data.success) return alert(data.message);
+
+      const banner = document.getElementById("otpSmsBanner");
+      banner.style.display = "block";
+      banner.innerHTML = `<strong>📲 OTP Sent to ${phone}:</strong> <span style="font-size:18px; font-weight:800;">${data.demo_otp}</span> (Auto-filled below)`;
+      document.getElementById("fpOtp").value = data.demo_otp;
+    }
+
+    document.getElementById("resetPasswordForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const phone = document.getElementById("fpPhone").value.trim();
+      const otp_code = document.getElementById("fpOtp").value.trim();
+      const new_password = document.getElementById("fpNewPassword").value.trim();
+
+      const res = await fetch("/api/auth/forgot-password/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, otp_code, new_password })
+      });
+      const data = await res.json();
+      if (!data.success) return alert(data.message);
+      alert("✅ " + data.message);
+      showView("login");
+    });
+  </script>
+</body>
+</html>

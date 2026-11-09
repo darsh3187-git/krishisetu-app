@@ -1,0 +1,6 @@
+{
+  "appId": "com.krishisetu.zerostart",
+  "appName": "KrishiSetu",
+  "webDir": "public",
+  "bundledWebRuntime": false
+}

@@ -1,0 +1,8 @@
+{
+  "name": "krishisetu-zero-app",
+  "version": "5.0.0",
+  "description": "Clean slate KrishiSetu App with Admin credentials admin/daRshaN, Forgot Password OTP, Live Camera Capture, Admin Approval & Chat",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "cors": "^2.8.5", "dotenv": "^16.4.5", "express": "^4.19.2" }
+}

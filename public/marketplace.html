@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KrishiSetu | Marketplace</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="/marketplace.html" <a href="/marketplace.html" class="brand" style="display:flex; align-items:center; gap:8px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c1 2 1.6 3.5 2.4 9.2A7 7 0 0 1 11 20z"></path><path d="M2 21c0-3 1.85-5.36 5-6"></path></svg>KrishiSetu</a> <small>| Marketplace</small></a>
+    <nav class="nav-links">
+      <a href="/marketplace.html" class="active">🛒 Marketplace</a>
+      <a href="/sell.html">📷 Sell an Item (Live Cam)</a>
+      <a href="/chat.html">💬 Chat Platform</a>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span id="userWelcome" style="font-size:13px; font-weight:700; color:var(--primary);"></span>
+      <a href="/index.html" class="btn btn-danger" style="padding:6px 12px; font-size:12px;" onclick="localStorage.removeItem('krishi_user')">Logout</a>
+    </div>
+  </header>
+  <main class="container">
+    <h2>🛒 Available Approved Farm Produce</h2>
+    <p style="color:var(--muted); font-size:13.5px;">All items below have been verified via live camera capture and approved by Admin.</p>
+    <div id="itemsGrid" class="grid">Loading approved items...</div>
+  </main>
+  <nav class="mobile-bottom-nav">
+    <a href="/marketplace.html" class="active"><span>🛒</span>Marketplace</a>
+    <a href="/sell.html"><span>📷</span>Sell Item</a>
+    <a href="/chat.html"><span>💬</span>Chat</a>
+    <a href="/index.html"><span>🔐</span>Account</a>
+  </nav>
+  <script>
+    const user = JSON.parse(localStorage.getItem("krishi_user")) || { id: 3, name: "Buyer" };
+    document.getElementById("userWelcome").textContent = `👤 ${user.name}`;
+    async function load() {
+      const res = await fetch("/api/items/approved");
+      const data = await res.json();
+      const grid = document.getElementById("itemsGrid");
+      if (!data.items || data.items.length === 0) {
+        grid.innerHTML = `<div class="card"><p>No approved items in marketplace yet.</p></div>`;
+        return;
+      }
+      grid.innerHTML = data.items.map(i => `
+        <article class="card">
+          <div>
+            <img src="${i.image_data}" class="item-photo" alt="${i.crop_name}">
+            <span class="badge badge-approved">✓ Admin Approved</span>
+            <h3 style="margin:6px 0; color:var(--primary);">${i.crop_name}</h3>
+            <p style="font-size:13px; color:var(--muted);">${i.description}</p>
+            <p style="margin:3px 0; font-size:13.5px;"><strong>Seller:</strong> ${i.seller_name}</p>
+            <p style="margin:3px 0; font-size:13.5px;"><strong>Qty:</strong> ${i.quantity_kg} kg | 📍 ${i.location}</p>
+            <div style="margin:10px 0;"><span class="price-tag">₹${i.price_per_kg} / kg</span></div>
+          </div>
+          <button class="btn" style="width:100%;" onclick="chat(${i.seller_id}, '${i.seller_name.replace(/'/g, "")}', ${i.id}, '${i.crop_name.replace(/'/g, "")}')">💬 Chat with Seller</button>
+        </article>
+      `).join("");
+    }
+    function chat(id, name, itemId, crop) {
+      localStorage.setItem("active_chat_partner", JSON.stringify({ partner_id: id, partner_name: name, item_id: itemId, item_name: crop }));
+      window.location.href = "/chat.html";
+    }
+    load();
+  </script>
+</body>
+</html>

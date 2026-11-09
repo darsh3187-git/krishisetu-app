@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KrishiSetu | Admin Approval Portal</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="/admin.html" class="brand">🛡️ KrishiSetu <small>| Admin Portal</small></a>
+    <nav class="nav-links"><a href="/admin.html" class="active">🛡️ Admin Moderation</a><a href="/marketplace.html">🛒 Marketplace</a></nav>
+    <a href="/index.html" class="btn btn-danger" style="padding:6px 12px; font-size:12px;" onclick="localStorage.removeItem('krishi_user')">Logout Admin</a>
+  </header>
+  <main class="container">
+    <h2>🛡️ Pending Seller Items (Live Camera Verification)</h2>
+    <p style="color:var(--muted); font-size:14px;">Approve items so they appear on the Marketplace.</p>
+    <div id="pendingGrid" class="grid">Loading...</div>
+  </main>
+  <script>
+    async function loadAdmin() {
+      const res = await fetch("/api/admin/items");
+      const data = await res.json();
+      const grid = document.getElementById("pendingGrid");
+      if (!data.pending || data.pending.length === 0) {
+        grid.innerHTML = `<div class="card" style="grid-column:1/-1; background:#e8f5ec; color:#1b5e36;"><strong>✅ All caught up!</strong> No pending items.</div>`;
+        return;
+      }
+      grid.innerHTML = data.pending.map(i => `
+        <div class="card" style="border:2px solid #f59e0b;">
+          <div>
+            <img src="${i.image_data}" class="item-photo" alt="${i.crop_name}">
+            <span class="badge badge-pending">⏳ PENDING APPROVAL</span>
+            <h3 style="margin:6px 0; color:var(--primary);">${i.crop_name} (${i.quality_grade})</h3>
+            <p style="font-size:12px; color:var(--muted);">📸 ${i.captured_at}</p>
+            <p style="margin:4px 0;"><strong>Seller:</strong> ${i.seller_name} (${i.seller_phone})</p>
+            <p style="margin:4px 0;"><strong>Qty:</strong> ${i.quantity_kg} kg | ₹${i.price_per_kg}/kg</p>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;">
+            <button class="btn" onclick="mod(${i.id}, 'approved')">✅ Approve</button>
+            <button class="btn btn-danger" onclick="mod(${i.id}, 'rejected')">✖ Reject</button>
+          </div>
+        </div>
+      `).join("");
+    }
+    async function mod(id, status) {
+      const res = await fetch("/api/admin/items/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ item_id: id, status })
+      });
+      const data = await res.json();
+      if (data.success) { alert(data.message); loadAdmin(); }
+    }
+    loadAdmin();
+  </script>
+</body>
+</html>

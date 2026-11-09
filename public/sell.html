@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sell on KrishiSetu | Live Camera & Seller Reg</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="/marketplace.html" class="brand" style="display:flex; align-items:center; gap:8px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c1 2 1.6 3.5 2.4 9.2A7 7 0 0 1 11 20z"></path><path d="M2 21c0-3 1.85-5.36 5-6"></path></svg>
+      KrishiSetu
+    </a>
+    <nav class="nav-links">
+      <a href="/marketplace.html">🛒 Marketplace</a>
+      <a href="/sell.html" class="active">📷 Sell an Item (Live Cam)</a>
+      <a href="/chat.html">💬 Chat Platform</a>
+    </nav>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span id="sellerBadge" style="font-size:13px; font-weight:700; color:var(--primary);"></span>
+      <a href="/index.html" class="btn btn-danger" style="padding:6px 12px; font-size:12px;" onclick="localStorage.removeItem('krishi_user')">Logout</a>
+    </div>
+  </header>
+  <main class="container">
+    <!-- SELLER REGISTRATION -->
+    <section id="regCard" class="auth-container" style="max-width:540px; display:none;">
+      <h2 style="margin-top:0; color:var(--primary);">👨‍🌾 Step 1: Complete Seller Registration</h2>
+      <p style="font-size:13.5px; color:var(--muted);">Provide your farm details and Aadhaar number to generate your unique seller username.</p>
+      <form id="regForm">
+        <div class="form-group"><label>Farm / Producer Name</label><input type="text" id="farmName" placeholder="e.g. Cauvery Organic Farms" required></div>
+        <div class="form-group"><label>12-Digit Aadhaar Number</label><input type="text" id="aadhaarNumber" placeholder="e.g. 421155667788" maxlength="12" required></div>
+        <div class="form-row">
+          <div class="form-group"><label>UPI ID for Payments</label><input type="text" id="upiId" placeholder="farmer@upi" required></div>
+          <div class="form-group"><label>Farm Location</label><input type="text" id="farmLoc" placeholder="Mandya, Karnataka" required></div>
+        </div>
+        <button type="submit" class="btn" style="width:100%; padding:12px;">✅ Complete Registration & Generate Username →</button>
+      </form>
+    </section>
+
+    <!-- UPLOAD WORKSPACE WITH LIVE CAMERA -->
+    <div id="uploadWorkspace" style="display:none; grid-template-columns:1.05fr 0.95fr; gap:24px; align-items:start;">
+      <section class="card">
+        <h3 style="margin-top:0; color:var(--primary);">📷 Add Item (Mandatory Live Camera Photo)</h3>
+        <p id="sellerUsernameBanner" style="font-size:13px; background:var(--primary-light); color:var(--primary-dark); padding:8px 12px; border-radius:8px; font-weight:600;"></p>
+        
+        <div class="camera-box">
+          <video id="camVid" autoplay playsinline style="display:none;"></video>
+          <img id="camPrev" alt="Preview" style="display:none;">
+          <div id="camPlace" style="padding:45px 20px; color:#d1d5db;">
+            <div style="font-size:38px;">📸</div>
+            <p style="margin:6px 0 0; font-size:13.5px;">Live Camera Required (Gallery uploads disabled)</p>
+          </div>
+          <canvas id="camCanvas" width="480" height="320" style="display:none;"></canvas>
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <button type="button" class="btn btn-outline" onclick="startCam()">📷 1. Start Camera</button>
+          <button type="button" id="snapBtn" class="btn btn-accent" onclick="snapPhoto()" disabled>📸 2. Capture Live Photo</button>
+          <button type="button" id="retakeBtn" class="btn btn-danger" onclick="startCam()" style="display:none;">🔄 Retake</button>
+        </div>
+
+        <form id="itemForm">
+          <div class="form-group"><label>Crop Name</label><input type="text" id="cName" placeholder="Organic Ragi" required></div>
+          <div class="form-row">
+            <div class="form-group"><label>Category</label><select id="cCat"><option value="Grains & Millets">Grains & Millets</option><option value="Vegetables">Vegetables</option><option value="Spices">Spices</option><option value="Fruits">Fruits</option></select></div>
+            <div class="form-group"><label>Quality Grade</label><select id="cGrade"><option value="Grade A">Grade A</option><option value="Grade B">Grade B</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Quantity (kg)</label><input type="number" id="cQty" placeholder="500" required></div>
+            <div class="form-group"><label>Price (₹/kg)</label><input type="number" step="0.5" id="cPrice" placeholder="38" required></div>
+          </div>
+          <div class="form-group"><label>Location</label><input type="text" id="cLoc" required></div>
+          <div class="form-group"><label>Description</label><textarea id="cDesc" rows="2" placeholder="Fresh harvest..."></textarea></div>
+          <button type="submit" class="btn" style="width:100%; padding:12px;">🚀 Submit for Admin Approval</button>
+        </form>
+      </section>
+
+      <section>
+        <h3 style="margin-top:0; color:var(--primary);">📦 My Uploaded Items</h3>
+        <div id="myItemsList" style="display:flex; flex-direction:column; gap:12px;">Loading...</div>
+      </section>
+    </div>
+  </main>
+  <script>
+    let user = JSON.parse(localStorage.getItem("krishi_user"));
+    if (!user) window.location.href = "/index.html";
+    document.getElementById("sellerBadge").textContent = `👤 ${user.name}`;
+
+    let stream = null, picData = null, stamp = null;
+
+    function refreshView() {
+      if (!user.is_seller_registered) {
+        document.getElementById("regCard").style.display = "block";
+        document.getElementById("uploadWorkspace").style.display = "none";
+        document.getElementById("farmLoc").value = user.location || "Karnataka";
+      } else {
+        document.getElementById("regCard").style.display = "none";
+        document.getElementById("uploadWorkspace").style.display = "grid";
+        document.getElementById("cLoc").value = user.location || "Mandya, Karnataka";
+        document.getElementById("sellerUsernameBanner").textContent = `🌾 Seller Username: @${user.username || 'farmer'} | Farm: ${user.farm_name}`;
+        loadMy();
+      }
+    }
+
+    document.getElementById("regForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const res = await fetch("/api/seller/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          farm_name: document.getElementById("farmName").value,
+          aadhaar_number: document.getElementById("aadhaarNumber").value,
+          upi_id: document.getElementById("upiId").value,
+          location: document.getElementById("farmLoc").value
+        })
+      });
+      const data = await res.json();
+      if (!data.success) return alert(data.message);
+      user = data.user;
+      localStorage.setItem("krishi_user", JSON.stringify(user));
+      alert("✅ " + data.message);
+      refreshView();
+    });
+
+    async function startCam() {
+      const vid = document.getElementById("camVid");
+      const prev = document.getElementById("camPrev");
+      const place = document.getElementById("camPlace");
+      picData = null;
+      prev.style.display = "none";
+      document.getElementById("retakeBtn").style.display = "none";
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+        vid.srcObject = stream;
+        vid.style.display = "block";
+        place.style.display = "none";
+        document.getElementById("snapBtn").disabled = false;
+      } catch (err) {
+        place.style.display = "block";
+        place.innerHTML = `<p style="color:#fcd34d;">⚠️ Camera simulated: click 'Capture Live Photo'</p>`;
+        document.getElementById("snapBtn").disabled = false;
+      }
+    }
+
+    function snapPhoto() {
+      const vid = document.getElementById("camVid");
+      const canvas = document.getElementById("camCanvas");
+      const prev = document.getElementById("camPrev");
+      const place = document.getElementById("camPlace");
+      const ctx = canvas.getContext("2d");
+      stamp = new Date().toLocaleString();
+
+      if (stream && vid.style.display === "block") {
+        ctx.drawImage(vid, 0, 0, canvas.width, canvas.height);
+        stream.getTracks().forEach(t => t.stop());
+        vid.style.display = "none";
+      } else {
+        ctx.fillStyle = "#1b5e36";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 22px Arial";
+        ctx.fillText("LIVE CAMERA VERIFIED", 100, 140);
+      }
+
+      ctx.fillStyle = "rgba(0,0,0,0.65)";
+      ctx.fillRect(0, canvas.height - 32, canvas.width, 32);
+      ctx.fillStyle = "#4ade80";
+      ctx.font = "bold 13px Arial";
+      ctx.fillText("✓ LIVE CAM • " + stamp, 12, canvas.height - 11);
+
+      picData = canvas.toDataURL("image/jpeg", 0.85);
+      prev.src = picData;
+      prev.style.display = "block";
+      place.style.display = "none";
+      document.getElementById("retakeBtn").style.display = "inline-block";
+    }
+
+    document.getElementById("itemForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!picData) return alert("⚠️ Mandatory live camera photo required!");
+
+      const payload = {
+        seller_id: user.id,
+        crop_name: document.getElementById("cName").value,
+        category: document.getElementById("cCat").value,
+        quality_grade: document.getElementById("cGrade").value,
+        quantity_kg: document.getElementById("cQty").value,
+        price_per_kg: document.getElementById("cPrice").value,
+        location: document.getElementById("cLoc").value,
+        description: document.getElementById("cDesc").value,
+        image_data: picData,
+        captured_at: stamp
+      };
+
+      const res = await fetch("/api/items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!data.success) return alert(data.message);
+      alert("✅ " + data.message);
+      document.getElementById("itemForm").reset();
+      document.getElementById("camPrev").style.display = "none";
+      document.getElementById("camPlace").style.display = "block";
+      picData = null;
+      loadMy();
+    });
+
+    async function loadMy() {
+      const res = await fetch(`/api/items/seller/${user.id}`);
+      const data = await res.json();
+      document.getElementById("myItemsList").innerHTML = (data.items || []).map(i => `
+        <div class="card">
+          <div style="display:flex; gap:10px; align-items:center;">
+            <img src="${i.image_data}" style="width:68px; height:68px; object-fit:cover; border-radius:8px;">
+            <div style="flex:1;">
+              <strong>${i.crop_name}</strong>
+              <br><span class="badge badge-${i.status}">${i.status.toUpperCase()}</span>
+              <div style="font-size:12.5px;">${i.quantity_kg} kg @ ₹${i.price_per_kg}/kg</div>
+            </div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    refreshView();
+  </script>
+</body>
+</html>

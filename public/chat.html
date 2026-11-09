@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KrishiSetu | Chat Platform</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="/marketplace.html" class="brand" style="display:flex; align-items:center; gap:8px;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.4 19 2c1 2 1.6 3.5 2.4 9.2A7 7 0 0 1 11 20z"></path><path d="M2 21c0-3 1.85-5.36 5-6"></path></svg>
+      KrishiSetu <small>| Chat</small>
+    </a>
+    <nav class="nav-links">
+      <a href="/marketplace.html">🛒 Marketplace</a>
+      <a href="/sell.html">📷 Sell Item</a>
+      <a href="/chat.html" class="active">💬 Chat Platform</a>
+    </nav>
+    <a href="/index.html" class="btn btn-danger" style="padding:6px 12px; font-size:12px;" onclick="localStorage.removeItem('krishi_user')">Logout</a>
+  </header>
+  <main class="container">
+    <div class="chat-layout">
+      <aside class="chat-sidebar">
+        <div class="chat-sidebar-header">👥 Conversations</div>
+        <div id="contactList" class="chat-contact-list">Loading...</div>
+      </aside>
+      <section class="chat-main">
+        <div class="chat-header">
+          <span id="partnerTitle">Select contact</span>
+          <a href="/marketplace.html" class="btn btn-outline" style="padding:5px 10px; font-size:11.5px;">← Market</a>
+        </div>
+        <div id="messagesBox" class="chat-messages"></div>
+        <form id="chatForm" class="chat-input-bar">
+          <input type="text" id="chatText" placeholder="Type a message to negotiate price or quantity..." required autocomplete="off">
+          <button type="submit" class="btn">Send ➤</button>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script>
+    const user = JSON.parse(localStorage.getItem("krishi_user")) || { id: 3, name: "Deepak Kumar" };
+    let activePartner = JSON.parse(localStorage.getItem("active_chat_partner")) || null;
+    let messagesCache = [];
+
+    async function loadChat() {
+      const res = await fetch(`/api/chat/messages/${user.id}`);
+      const data = await res.json();
+      if (!data.success) return;
+      messagesCache = data.messages || [];
+
+      const contacts = [];
+      const seen = new Set();
+      (data.conversations || []).forEach(c => { seen.add(c.partner_id); contacts.push(c); });
+      (data.directory || []).forEach(u => {
+        if (!seen.has(u.id)) contacts.push({ partner_id: u.id, partner_name: u.name, last_message: "Start chat", last_item: u.farm_name || "Direct Chat" });
+      });
+
+      if (!activePartner && contacts.length > 0) activePartner = contacts[0];
+
+      document.getElementById("contactList").innerHTML = contacts.map(c => `
+        <div class="chat-contact ${activePartner && Number(activePartner.partner_id) === Number(c.partner_id) ? 'active' : ''}"
+             onclick="selectP(${c.partner_id}, '${c.partner_name.replace(/'/g, "")}')">
+          <div style="font-weight:700; font-size:14px;">👤 ${c.partner_name}</div>
+          <div style="font-size:12px; color:var(--muted);">${c.last_message || ""}</div>
+        </div>
+      `).join("");
+
+      renderThread();
+    }
+
+    function selectP(id, name) {
+      activePartner = { partner_id: id, partner_name: name };
+      localStorage.setItem("active_chat_partner", JSON.stringify(activePartner));
+      loadChat();
+    }
+
+    function renderThread() {
+      const box = document.getElementById("messagesBox");
+      if (!activePartner) return;
+      document.getElementById("partnerTitle").textContent = `Chat with ${activePartner.partner_name}`;
+
+      const thread = messagesCache.filter(m =>
+        (m.sender_id === user.id && m.receiver_id === Number(activePartner.partner_id)) ||
+        (m.sender_id === Number(activePartner.partner_id) && m.receiver_id === user.id)
+      );
+
+      box.innerHTML = thread.length === 0 ? `<p style="text-align:center; color:var(--muted); margin-top:30px;">No messages yet with ${activePartner.partner_name}.</p>` :
+        thread.map(m => `
+          <div class="msg-bubble ${m.sender_id === user.id ? 'msg-sent' : 'msg-received'}">
+            <div style="font-size:11px; font-weight:700; margin-bottom:2px;">${m.sender_id === user.id ? "You" : m.sender_name}</div>
+            <div>${m.text}</div>
+          </div>
+        `).join("");
+      box.scrollTop = box.scrollHeight;
+    }
+
+    document.getElementById("chatForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!activePartner) return;
+      const input = document.getElementById("chatText");
+      const text = input.value.trim();
+      if (!text) return;
+
+      await fetch("/api/chat/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sender_id: user.id, sender_name: user.name, receiver_id: activePartner.partner_id, receiver_name: activePartner.partner_name, text })
+      });
+      input.value = "";
+      loadChat();
+    });
+
+    loadChat();
+    setInterval(loadChat, 2500);
+  </script>
+</body>
+</html>
